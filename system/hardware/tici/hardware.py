@@ -14,6 +14,8 @@ from system.hardware.tici import iwlist
 from system.hardware.tici.pins import GPIO
 from system.hardware.tici.amplifier import Amplifier
 
+PIXEL3 = os.path.isfile('/data/pixel3')
+
 NM = 'org.freedesktop.NetworkManager'
 NM_CON_ACT = NM + '.Connection.Active'
 NM_DEV = NM + '.Device'
@@ -175,6 +177,7 @@ class Tici(HardwareBase):
     return str(self.get_modem().Get(MM_MODEM, 'EquipmentIdentifier', dbus_interface=DBUS_PROPS, timeout=TIMEOUT))
 
   def get_network_info(self):
+    if PIXEL3: return None
     modem = self.get_modem()
     try:
       info = modem.Command("AT+QNWINFO", math.ceil(TIMEOUT), dbus_interface=MM_MODEM, timeout=TIMEOUT)
@@ -370,6 +373,15 @@ class Tici(HardwareBase):
     os.system("sudo poweroff")
 
   def get_thermal_config(self):
+    if PIXEL3:
+      return ThermalConfig(cpu=(["cpu%d-silver-usr" % i for i in range(4)] +
+                              ["cpu%d-gold-usr" % i for i in range(4)], 1000),
+                         gpu=(("gpu0-usr", "gpu1-usr"), 1000),
+                         mem=("ddr-lowf", 1),
+                         bat=(None, 1),
+                         ambient=("xo-therm-adc", 1000),
+                         pmic=(("pm8998_tz", "pm8005_tz"), 1000))
+
     return ThermalConfig(cpu=(["cpu%d-silver-usr" % i for i in range(4)] +
                               ["cpu%d-gold-usr" % i for i in range(4)], 1000),
                          gpu=(("gpu0-usr", "gpu1-usr"), 1000),
@@ -393,6 +405,8 @@ class Tici(HardwareBase):
       return 0
 
   def set_power_save(self, powersave_enabled):
+    # TODO: Figure out amplifier for Pixel 3
+    if not PIXEL3:
     # amplifier, 100mW at idle
     self.amplifier.set_global_shutdown(amp_disabled=powersave_enabled)
     if not powersave_enabled:
@@ -409,12 +423,14 @@ class Tici(HardwareBase):
       gov = 'ondemand' if powersave_enabled else 'performance'
       sudo_write(gov, f'/sys/devices/system/cpu/cpufreq/policy{n}/scaling_governor')
 
-    # *** IRQ config ***
-    affine_irq(5, 565)   # kgsl-3d0
-    affine_irq(4, 740)   # xhci-hcd:usb1 goes on the boardd core
-    affine_irq(4, 1069)  # xhci-hcd:usb3 goes on the boardd core
-    for irq in range(237, 246):
-      affine_irq(5, irq) # camerad
+    # TODO: Figure out amplifier for Pixel 3
+    if not PIXEL3:
+      # *** IRQ config ***
+      affine_irq(5, 565)   # kgsl-3d0
+      affine_irq(4, 740)   # xhci-hcd:usb1 goes on the boardd core
+      affine_irq(4, 1069)  # xhci-hcd:usb3 goes on the boardd core
+      for irq in range(237, 246):
+        affine_irq(5, irq) # camerad
 
   def get_gpu_usage_percent(self):
     try:

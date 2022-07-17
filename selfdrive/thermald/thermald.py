@@ -25,6 +25,8 @@ from selfdrive.thermald.power_monitoring import PowerMonitoring
 from selfdrive.thermald.fan_controller import TiciFanController
 from system.version import terms_version, training_version
 
+PIXEL3 = os.path.isfile('/data/pxiel3')
+
 ThermalStatus = log.DeviceState.ThermalStatus
 NetworkType = log.DeviceState.NetworkType
 NetworkStrength = log.DeviceState.NetworkStrength
@@ -145,7 +147,7 @@ def hw_state_thread(end_event, hw_queue):
           registered_count = 0
 
         # TODO: remove this once the config is in AGNOS
-        if not modem_configured and len(HARDWARE.get_sim_info().get('sim_id', '')) > 0:
+        if not PIXEL3 and not modem_configured and len(HARDWARE.get_sim_info().get('sim_id', '')) > 0:
           cloudlog.warning("configuring modem")
           HARDWARE.configure_modem()
           modem_configured = True
@@ -193,7 +195,8 @@ def thermald_thread(end_event, hw_queue):
   params = Params()
   power_monitor = PowerMonitoring()
 
-  HARDWARE.initialize_hardware()
+  if not PIXEL3:
+    HARDWARE.initialize_hardware()
   thermal_config = HARDWARE.get_thermal_config()
 
   fan_controller = None
