@@ -6,6 +6,7 @@ import platform
 import numpy as np
 
 TICI = os.path.isfile('/TICI')
+PIXEL3 = os.path.isfile('/data/pixel3')
 AGNOS = TICI
 
 Decider('MD5-timestamp')
@@ -93,9 +94,15 @@ if arch == "larch64":
     "#third_party/libyuv/larch64/lib",
     "/usr/lib/aarch64-linux-gnu"
   ]
-  cpppath += [
-    "#system/camerad/include",
-  ]
+  if not os.path.isfile('/data/pixel3'):
+    cpppath += [
+      "#system/camerad/include",
+    ]
+  else:
+    cpppath += [
+      "#system/camerad/include/pixel3",
+    ]
+
   cflags = ["-DQCOM2", "-mcpu=cortex-a57"]
   cxxflags = ["-DQCOM2", "-mcpu=cortex-a57"]
   rpath += ["/usr/local/lib"]

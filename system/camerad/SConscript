@@ -1,3 +1,4 @@
+import os
 Import('env', 'arch', 'cereal', 'messaging', 'common', 'gpucommon', 'visionipc', 'USE_WEBCAM')
 
 libs = ['m', 'pthread', common, 'jpeg', 'OpenCL', 'yuv', cereal, messaging, 'zmq', 'capnp', 'kj', visionipc, gpucommon]
@@ -6,6 +7,14 @@ cameras = []
 if arch == "larch64":
   libs += ['atomic']
   cameras = ['cameras/camera_qcom2.cc']
+  if os.path.isfile('/data/pixel3'):
+    cameras = ['cameras/camera_pixel3.cc']
+    env = env.Clone()
+    env.Append(CXXFLAGS = '-DPIXEL3')
+    env.Append(CFLAGS = '-DPIXEL3')
+    if not os.path.isfile('/data/enable_yuv'):
+      env.Append(CXXFLAGS = '-DUSE_RAW10')
+      env.Append(CFLAGS = '-DUSE_RAW10')
 
   env.Program('camerad', [
       'main.cc',

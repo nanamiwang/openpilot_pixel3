@@ -24,7 +24,8 @@
 #define CAMERA_ID_LGC615 7
 #define CAMERA_ID_AR0231 8
 #define CAMERA_ID_IMX390 9
-#define CAMERA_ID_MAX 10
+#define CAMERA_ID_IMX363 10
+#define CAMERA_ID_MAX 11
 
 const int YUV_BUFFER_COUNT = 40;
 
@@ -126,3 +127,6 @@ void camera_autoexposure(CameraState *s, float grey_frac);
 void camerad_thread();
 
 int open_v4l_by_name_and_index(const char name[], int index = 0, int flags = O_RDWR | O_NONBLOCK);
+#ifdef PIXEL3
+int open_cam_dev_by_name(const char name[], int flags = O_RDWR | O_NONBLOCK);
+#endif

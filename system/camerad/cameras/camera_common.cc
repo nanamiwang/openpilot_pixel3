@@ -20,7 +20,11 @@
 
 #ifdef QCOM2
 #include "CL/cl_ext_qcom.h"
+#ifdef PIXEL3
+#include "system/camerad/cameras/camera_pixel3.h"
+#else  //PIXEL3
 #include "system/camerad/cameras/camera_qcom2.h"
+#endif //PIXEL3
 #else
 #include "system/camerad/test/camera_test.h"
 #endif
@@ -40,7 +44,11 @@ public:
              ci->frame_width, ci->frame_height, ci->frame_stride, ci->frame_offset,
              b->rgb_width, b->rgb_height, b->rgb_stride, buf_width, uv_offset,
              s->camera_num, s->camera_num==1 ? " -DVIGNETTING" : "");
+#ifdef PIXEL3
+    const char *cl_file = "cameras/debayer10_to_yuv.cl";
+#else
     const char *cl_file = "cameras/real_debayer.cl";
+#endif
     cl_program prg_debayer = cl_program_from_file(context, device_id, cl_file, args);
     krnl_ = CL_CHECK_ERR(clCreateKernel(prg_debayer, "debayer10", &err));
     CL_CHECK(clReleaseProgram(prg_debayer));
@@ -49,11 +57,21 @@ public:
   void queue(cl_command_queue q, cl_mem cam_buf_cl, cl_mem buf_cl, int width, int height, cl_event *debayer_event) {
     CL_CHECK(clSetKernelArg(krnl_, 0, sizeof(cl_mem), &cam_buf_cl));
     CL_CHECK(clSetKernelArg(krnl_, 1, sizeof(cl_mem), &buf_cl));
-
+#ifdef PIXEL3
+    assert(width % 4 == 0);
+    assert(height % 2 == 0);
+    const size_t globalWorkSize[] = {size_t(height/2), size_t(width / 4)};
+    const int debayer_local_worksize = 32;
+    const size_t localWorkSize[] = {debayer_local_worksize, debayer_local_worksize};
+    float gain = 1.0;
+    CL_CHECK(clSetKernelArg(krnl_, 2, sizeof(float), &gain));
+    CL_CHECK(clEnqueueNDRangeKernel(q, krnl_, 2, NULL, globalWorkSize, localWorkSize, 0, 0, debayer_event));
+#else
     const size_t globalWorkSize[] = {size_t(width / 2), size_t(height / 2)};
     const int debayer_local_worksize = 16;
     const size_t localWorkSize[] = {debayer_local_worksize, debayer_local_worksize};
     CL_CHECK(clEnqueueNDRangeKernel(q, krnl_, 2, NULL, globalWorkSize, localWorkSize, 0, 0, debayer_event));
+#endif
   }
 
   ~Debayer() {
@@ -85,6 +103,13 @@ void CameraBuf::init(cl_device_id device_id, cl_context context, CameraState *s,
 
   rgb_width = ci->frame_width;
   rgb_height = ci->frame_height;
+#ifdef PIXEL3
+  if(ci->bayer) {
+    // 2X downscale for pixel3 debayer
+    rgb_width = rgb_width / 2;
+    rgb_height = rgb_height / 2;
+  }
+#endif
 
   yuv_transform = get_model_yuv_transform();
 
@@ -370,3 +395,15 @@ int open_v4l_by_name_and_index(const char name[], int index, int flags) {
     }
   }
 }
+#ifdef PIXEL3
+int open_cam_dev_by_name(const char name[], int flags) {
+  for(int i = 0 ;i < 64;i++) {
+    std::string v4l_name = util::read_file(util::string_format("/sys/class/video4linux/video%d/name", i));
+    if (v4l_name.empty()) continue;
+    if (v4l_name.find(name) == 0) {
+      return HANDLE_EINTR(open(util::string_format("/dev/video%d", i).c_str(), flags));
+    }
+  }
+  return -1;
+}
+#endif
