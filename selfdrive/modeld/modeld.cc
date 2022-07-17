@@ -171,8 +171,13 @@ int main(int argc, char **argv) {
     assert(ret == 0);
   }
 
+#ifdef PIXEL3
+  bool main_wide_camera = false;
+  bool use_extra_client = false;
+#else
   bool main_wide_camera = Params().getBool("WideCameraOnly");
   bool use_extra_client = !main_wide_camera;  // set for single camera mode
+#endif
 
   // cl init
   cl_device_id device_id = cl_get_device_id(CL_DEVICE_TYPE_DEFAULT);

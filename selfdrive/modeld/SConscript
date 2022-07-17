@@ -39,6 +39,8 @@ if arch == "larch64":
     dlsym_offset = get_dlsym_offset()
     lenv['CXXFLAGS'].append("-DUSE_THNEED")
     lenv['CXXFLAGS'].append(f"-DDLSYM_OFFSET={dlsym_offset}")
+  if os.path.isfile('/data/pixel3'):
+    lenv['CXXFLAGS'].append("-DPIXEL3")
 else:
   libs += ['pthread']
 

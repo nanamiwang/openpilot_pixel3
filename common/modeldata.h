@@ -24,9 +24,28 @@ constexpr auto T_IDXS_FLOAT = build_idxs<float, TRAJECTORY_SIZE>(10.0);
 constexpr auto X_IDXS = build_idxs<double, TRAJECTORY_SIZE>(192.0);
 constexpr auto X_IDXS_FLOAT = build_idxs<float, TRAJECTORY_SIZE>(192.0);
 
+#ifdef PIXEL3
+#if 0
+// 4032x3024
+const mat3 fcam_intrinsic_matrix =
+  (mat3){{3436.6, 0.0, 1948.7,
+          0.0, 3445.6, 1488.9,
+          0.0, 0.0, 1.0}};
+#else
+// 1008x756
+const mat3 fcam_intrinsic_matrix =
+  (mat3){{805.537, 0.0, 525.6,
+          0.0, 808.6, 369.94678,
+          0.0, 0.0, 1.0}};
+#endif
+const mat3 fcam_intrinsic_matrix_c3 = (mat3){{2648.0, 0.0, 1928.0 / 2,
+                                           0.0, 2648.0, 1208.0 / 2,
+                                           0.0, 0.0, 1.0}};
+#else
 const mat3 fcam_intrinsic_matrix = (mat3){{2648.0, 0.0, 1928.0 / 2,
                                            0.0, 2648.0, 1208.0 / 2,
                                            0.0, 0.0, 1.0}};
+#endif
 
 // tici ecam focal probably wrong? magnification is not consistent across frame
 // Need to retrain model before this can be changed
