@@ -377,7 +377,7 @@ class Tici(HardwareBase):
       return ThermalConfig(cpu=(["cpu%d-silver-usr" % i for i in range(4)] +
                               ["cpu%d-gold-usr" % i for i in range(4)], 1000),
                          gpu=(("gpu0-usr", "gpu1-usr"), 1000),
-                         mem=("ddr-lowf", 1),
+                         mem=("ddr-lowf", 1000),
                          bat=(None, 1),
                          ambient=("xo-therm-adc", 1000),
                          pmic=(("pm8998_tz", "pm8005_tz"), 1000))
