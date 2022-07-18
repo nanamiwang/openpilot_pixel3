@@ -31,6 +31,8 @@ from selfdrive.locationd.calibrationd import Calibration
 from system.hardware import HARDWARE
 from selfdrive.manager.process_config import managed_processes
 
+PIXEL3 = os.path.isfile('/data/pixel3')
+
 SOFT_DISABLE_TIME = 3  # seconds
 LDW_MIN_SPEED = 31 * CV.MPH_TO_MS
 LANE_DEPARTURE_THRESHOLD = 0.1
@@ -73,6 +75,9 @@ class Controls:
                                      'carControl', 'carEvents', 'carParams'])
 
     self.camera_packets = ["roadCameraState", "driverCameraState", "wideRoadCameraState"]
+    # Temporarily disable driver cam and wide cam for Pixel 3
+    if PIXEL3:
+      self.camera_packets = ["roadCameraState"]
 
     self.can_sock = can_sock
     if can_sock is None:
