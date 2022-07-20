@@ -1,16 +1,38 @@
 import numpy as np
-
+import os
 import common.transformations.orientation as orient
+
+PIXEL3 = os.path.isfile('/data/pixel3')
+'''
+#ifdef PIXEL3
+#if 0
+// 4032x3024
+const mat3 fcam_intrinsic_matrix =
+  (mat3){{3436.6, 0.0, 1948.7,
+          0.0, 3445.6, 1488.9,
+          0.0, 0.0, 1.0}};
+#else
+// 1008x756
+const mat3 fcam_intrinsic_matrix =
+  (mat3){{805.537, 0.0, 525.6,
+          0.0, 808.6, 369.94678,
+          0.0, 0.0, 1.0}};
+#endif
+'''
 
 ## -- hardcoded hardware params --
 eon_f_focal_length = 910.0
 eon_d_focal_length = 650.0
 tici_f_focal_length = 2648.0
+if PIXEL3:
+  tici_f_focal_length = 808.6
 tici_e_focal_length = tici_d_focal_length = 567.0 # probably wrong? magnification is not consistent across frame
 
 eon_f_frame_size = (1164, 874)
 eon_d_frame_size = (816, 612)
 tici_f_frame_size = tici_e_frame_size = tici_d_frame_size = (1928, 1208)
+if PIXEL3:
+  tici_f_frame_size = (1008, 756)
 
 # aka 'K' aka camera_frame_from_view_frame
 eon_fcam_intrinsics = np.array([
